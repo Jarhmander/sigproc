@@ -1,22 +1,28 @@
 #include "signode.hpp"
 //------------------------------------------------------------------------------
 #include "sigproc.hpp"
+#include <sstream>
 //------------------------------------------------------------------------------
 
 //------------------------------------------------------------------------------
-static struct nullproc_t : tsigproc<1,sigproc::fixed,0>
-{
-    void update(unsigned, float &v) override { v = 0.f; }
-} nullproc;
 
-signode nullnode {&nullproc};
+signode nullnode {sigproc::nullproc()};
 
 //------------------------------------------------------------------------------
 
 //------------------------------------------------------------------------------
 signode::signode()
-    : signode(&::nullproc)
+    : signode(sigproc::nullproc())
 {
+}
+//------------------------------------------------------------------------------
+signode::signode(sigproc *sproc) 
+    : sigproc_{sproc}
+{
+    name = "Node ";
+    std::stringstream ss;
+    ss << this;
+    name += std::move(ss).str();
 }
 //------------------------------------------------------------------------------
 float signode::out(unsigned inclock)
@@ -42,7 +48,7 @@ void signode::connect(sigproc *sproc)
 //------------------------------------------------------------------------------
 void signode::disconnect()
 {
-    connect(&::nullproc);
+    connect(sigproc::nullproc());
 }
 //------------------------------------------------------------------------------
 bool signode::value(unsigned inclock, float &v) const
@@ -53,11 +59,6 @@ bool signode::value(unsigned inclock, float &v) const
         v = value_;
     }
     return b;
-}
-//------------------------------------------------------------------------------
-sigproc *signode::nullproc()
-{
-    return &::nullproc;
 }
 //------------------------------------------------------------------------------
 signode *signode::nullnode()

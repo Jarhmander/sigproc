@@ -11,7 +11,7 @@ template <typename T>
 
 using vecnodes = vec<signode *>;
 
-class constant : public tsigproc<1,sigproc::fixed,0>
+class constant : public tsigproc_infixed<1,0>
 {
 public:
     float value = 0.f;
@@ -25,11 +25,9 @@ public:
     {
         v = value;
     }
-    unsigned num_innodes() const override { return 0; }
-    unsigned num_outnodes() const override { return 1; }
 };
 
-class adder : public tsigproc<1,sigproc::fixed,2>
+class adder : public tsigproc_invar<1,2>
 {
 public:
     void update(unsigned inclock, float &v) override
@@ -40,6 +38,34 @@ public:
             out += in->out(inclock);
         }
         v = out;
+    }
+};
+
+class gain   : public tsigproc_infixed<1,1>
+{
+public:
+    gain(float a) { value = a; }
+
+    float value = 1.f;
+
+    void update(unsigned inclock, float &v) override
+    {
+        v = inputs_[0]->out(inclock) * value;
+    }
+};
+
+class delay1 : public tsigproc_infixed<1,1>
+{
+    float z = 0.f;
+public:
+    void update(unsigned inclock, float &v) override
+    {
+        v = z;
+        inputs_[0]->out(inclock);
+    }
+    void clock() override
+    {
+        z = inputs_[0]->value();
     }
 };
 

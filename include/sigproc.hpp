@@ -3,13 +3,17 @@
 //------------------------------------------------------------------------------
 #include "signode.hpp"
 #include <array>
+#include <vector>
 //------------------------------------------------------------------------------
 
 
 class sigproc
 {
+    friend class mimosystem;
+
 public:
-    enum nvars { fixed, variadic };
+    // dtor
+    virtual ~sigproc() {}
 
     // Sequential circuits (ex: filters) need to be clocked in order to produce
     // new values afterwards.
@@ -33,22 +37,100 @@ public:
     // nullptr.
     virtual signode *outnode(unsigned) = 0;
 
+    // Give the Nth input node, 0-based. If input doesn't exist, returns
+    // nullptr.
+    virtual signode *innode(unsigned) const = 0;
+
     // Connect the Nth input to a node, 0-based. If input doesn't exist, returns
     // nullptr, otherwise returns the argument.
+protected:
     virtual signode *connect(unsigned, signode *) = 0;
 
     signode *disconnect(unsigned idx)
     {
         return connect(idx, signode::nullnode());
     }
+public:
+
+    static sigproc *nullproc();
 };
 
+class sigproc_fixedinputs : public sigproc
+{};
 
-template <unsigned num_out>
- class sigproc_outspec : public sigproc
+class sigproc_varinputs : public sigproc
 {
 public:
-    sigproc_outspec() 
+    virtual void resize_innodes(unsigned) = 0;
+};
+
+template <typename Base, typename Container>
+ class sigproc_inputspecbase : public Base
+{
+protected:
+    signode *connect(unsigned idx, signode *snode) override
+    {
+        if (idx >= inputs_.size())
+            return nullptr;
+
+        if (!snode)
+            snode = signode::nullnode();
+
+        inputs_[idx] = snode;
+
+        return snode;
+    }
+public:
+    signode *innode(unsigned idx) const override
+    {
+        return (idx >= inputs_.size()) ? nullptr : inputs_[idx];
+    }
+
+    unsigned num_innodes() const override
+    {
+        return inputs_.size();
+    }
+
+protected:
+    Container inputs_;
+};
+
+template <typename Container, unsigned num_in>
+ class sigproc_varninputs
+        : public sigproc_inputspecbase<sigproc_varinputs,Container>
+{
+public:
+    sigproc_varninputs()
+    {
+        this->inputs_.reserve(num_in);
+        this->inputs_.insert(this->inputs_.begin(), num_in, 
+                                                        signode::nullnode());
+    }
+    
+    void resize_innodes(unsigned newsz) override
+    {
+        this->inputs_.resize(newsz,signode::nullnode());
+    }
+};
+
+template <unsigned num_in>
+ class sigproc_fixninputs
+        : public sigproc_inputspecbase<
+            sigproc_fixedinputs,std::array<signode*,num_in>
+          >
+{
+public:
+    sigproc_fixninputs()
+    {
+        this->inputs_.fill(signode::nullnode());
+    }
+};
+
+template <unsigned num_out, typename Base>
+ class tsigproc : public Base
+{
+public:
+    tsigproc() 
     {
         for (auto &i : outputs_)
         {
@@ -66,44 +148,17 @@ public:
         return idx >= outputs_.size() ? nullptr : &outputs_[idx];
     }
 
-    enum { n_outputs = num_out };
-
 protected:
     std::array<signode, num_out> outputs_; 
 };
 
-template <unsigned num_out, sigproc::nvars, unsigned num_in>
- class tsigproc;
+template <unsigned num_out, unsigned num_in>
+ using tsigproc_infixed = tsigproc<num_out,sigproc_fixninputs<num_in>>;
 
 template <unsigned num_out, unsigned num_in>
- class tsigproc<num_out, sigproc::fixed, num_in> : public sigproc_outspec<num_out>
-{
-public:
-    tsigproc()
-    {
-       inputs_.fill(signode::nullnode());
-    } 
-
-    signode *connect(unsigned idx, signode *snode)
-    {
-        if (idx >= inputs_.size())
-            return nullptr;
-
-        if (!snode)
-            snode = signode::nullnode();
-
-        inputs_[idx] = snode;
-    }
-
-    unsigned num_innodes() const override
-    {
-        return num_in;
-    }
-
-    enum { n_inputs = num_in };
-protected:
-    std::array<signode *, num_in> inputs_;
-};
+ using tsigproc_invar = tsigproc<num_out,
+                            sigproc_varninputs<std::vector<signode*>, num_in>
+                            >;
 
 //------------------------------------------------------------------------------
 #endif // SIGPROC_HPP

@@ -1,6 +1,8 @@
 #ifndef SIGNODE_HPP
 #define SIGNODE_HPP
 //------------------------------------------------------------------------------
+#include <string>
+//------------------------------------------------------------------------------
 
 class sigproc;
 
@@ -8,7 +10,7 @@ class signode
 {
 public:
     signode();
-    signode(sigproc *sproc) : sigproc_{sproc} {}
+    signode(sigproc *sproc);
     float out(unsigned inclock);
     void  update(unsigned inclock, float value);
 
@@ -19,7 +21,8 @@ public:
     bool value(unsigned inclock, float &v) const;
     float value() const { return value_; }
 
-    static sigproc *nullproc();
+    std::string name;
+
     static signode *nullnode();
 private:
     unsigned clockref_ = -1u;
