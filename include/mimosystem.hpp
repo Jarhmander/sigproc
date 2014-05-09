@@ -85,6 +85,7 @@ public:
     signode *link(signode *, unsigned out);
     signode *linknext(signode *);
     signode *unlink(unsigned out);
+    void unlinkall();
 
     auto procs() const -> const decltype(sigprocs_) &
     {
