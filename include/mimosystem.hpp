@@ -10,6 +10,8 @@
 
 class sigproc;
 
+class sigproclkd;
+
 class signode;
 
 class mimosystem
@@ -39,11 +41,12 @@ private:
     template <typename T>   using vec   = std::vector<T>;
     template <typename Key, typename T> 
                             using hasht = std::unordered_map<Key,T>;
-    template <typename Key, typename HashF>
+    template <typename Key, typename HashF=std::hash<Key>>
                              using set   = std::unordered_set<Key,HashF>;
 
     vec<ptr<sigproc>>                               sigprocs_;
     hasht<signode*,set<input_desc, indesc_hash>>    connections_;
+    set<sigproclkd *>                               sigproclkds_;
     vec<signode *>                                  outnodes_;
 
     unsigned current_clock_ = 0;

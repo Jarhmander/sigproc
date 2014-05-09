@@ -15,8 +15,9 @@ using std::upper_bound;
 //------------------------------------------------------------------------------
 mimosystem::mimosystem()
 {
-    sigprocs_.reserve(1024);
-    connections_.reserve(1024);
+    sigprocs_.reserve(32);
+    connections_.reserve(32);
+    sigproclkds_.reserve(32);
 }
 //------------------------------------------------------------------------------
 auto mimosystem::out(bool postclock) -> const vec<signode *> &
@@ -36,9 +37,9 @@ auto mimosystem::out(bool postclock) -> const vec<signode *> &
 //------------------------------------------------------------------------------
 void mimosystem::clock() const
 {
-    for (auto &sig : sigprocs_)
+    for (auto &sclk : sigproclkds_)
     {
-        sig->clock();
+        sclk->clock();
     }
 }
 //------------------------------------------------------------------------------
@@ -49,6 +50,9 @@ void mimosystem::destroy(unsigned idx)
 
     auto it = sigprocs_.begin() + idx;
     const auto p = it->get();
+
+    // Remove from sigproclks, if it exists
+    sigproclkds_.erase(dynamic_cast<sigproclkd*>(p));
 
     // Find its output nodes, unlink them from their associated sigprocs.
     const auto numout = p->num_outnodes();
@@ -68,6 +72,8 @@ void mimosystem::destroy(unsigned idx)
             }
             connections_.erase(deadnode);
         }
+
+        // Remove from outnodes_ if it exists
         auto begoutn = begin(outnodes_);
         auto endoutn = end(outnodes_);
 
@@ -78,6 +84,7 @@ void mimosystem::destroy(unsigned idx)
         }
     }
 
+    // Finally, remove from sigprocs_
     sigprocs_.erase(it);
 }
 //------------------------------------------------------------------------------
@@ -179,8 +186,9 @@ signode *mimosystem::unlink(unsigned out)
 //------------------------------------------------------------------------------
 void mimosystem::newsigproc(ptr<sigproc> pin)
 {
-    auto p = pin.get();
+    const auto p = pin.get();
 
+    // insert into sigprocs_ the new sigproc
     sigprocs_.emplace(
             upper_bound(begin(sigprocs_), end(sigprocs_), p,
                 [](sigproc *a, const ptr<sigproc> &b)
@@ -188,6 +196,15 @@ void mimosystem::newsigproc(ptr<sigproc> pin)
                     return a < b.get();
                 }), move(pin)
             );
+
+    // If this can be clocked, add to sigproclkd
+    const auto sclk = dynamic_cast<sigproclkd*>(p);
+    if (sclk)
+    {
+        sigproclkds_.emplace(sclk);
+    }
+
+    // Add all outnodes to the connection map, initialized with an empty set
     const auto numoutnodes = p->num_outnodes();
 
     for (unsigned i = 0; i < numoutnodes; ++i)

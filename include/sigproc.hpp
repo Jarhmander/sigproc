@@ -15,10 +15,6 @@ public:
     // dtor
     virtual ~sigproc() {}
 
-    // Sequential circuits (ex: filters) need to be clocked in order to produce
-    // new values afterwards.
-    virtual void clock() {}
-
     // signode calls sigproc::update when necessary.
     // sigprocs can update directly the float reference if there's only one
     // output, if desired. Otherwise, it must update all its output nodes by
@@ -53,6 +49,16 @@ protected:
 public:
 
     static sigproc *nullproc();
+};
+
+class sigproclkd
+{
+public:
+    virtual ~sigproclkd() {}
+
+    // Sequential circuits (ex: filters) need to be clocked in order to produce
+    // new values afterwards.
+    virtual void clock() = 0;
 };
 
 class sigproc_fixedinputs : public sigproc

@@ -54,7 +54,7 @@ public:
     }
 };
 
-class delay1 : public tsigproc_infixed<1,1>
+class delay1 : public tsigproc_infixed<1,1>, public sigproclkd
 {
     float z = 0.f;
 public:
