@@ -4,6 +4,9 @@
 #include <string>
 //------------------------------------------------------------------------------
 
+namespace dspunit
+{
+
 class sigproc;
 
 class signode
@@ -29,6 +32,8 @@ private:
     float value_       = 0.f;
     sigproc *sigproc_;
 };
+
+} // namespace dspunit
 
 //------------------------------------------------------------------------------
 #endif // SIGNODE_HPP

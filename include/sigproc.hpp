@@ -6,6 +6,8 @@
 #include <vector>
 //------------------------------------------------------------------------------
 
+namespace dspunit
+{
 
 class sigproc
 {
@@ -165,6 +167,8 @@ template <unsigned num_out, unsigned num_in>
  using tsigproc_invar = tsigproc<num_out,
                             sigproc_varninputs<std::vector<signode*>, num_in>
                             >;
+
+} // namespace dspunit
 
 //------------------------------------------------------------------------------
 #endif // SIGPROC_HPP

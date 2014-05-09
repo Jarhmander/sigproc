@@ -6,15 +6,18 @@
 
 using namespace std;
 
+namespace dsp = dspunit;
+
+
 int main()
 {
-    mimosystem mms {};
+    dsp::mimosystem mms {};
 
-    auto c_adder00 = mms.create<adder>();
-    auto c_const00 = mms.create<constant>(2);
-    auto c_const01 = mms.create<constant>(3);
-    auto c_sgain00 = mms.create<gain>(.5);
-    auto c_delay00 = mms.create<delay1>();
+    auto c_adder00 = mms.create<dsp::adder>();
+    auto c_const00 = mms.create<dsp::constant>(2);
+    auto c_const01 = mms.create<dsp::constant>(3);
+    auto c_sgain00 = mms.create<dsp::gain>(.5);
+    auto c_delay00 = mms.create<dsp::delay1>();
 
     c_adder00->resize_innodes(3);
 

@@ -8,6 +8,9 @@
 #include <memory>
 //------------------------------------------------------------------------------
 
+namespace dspunit
+{
+
 class sigproc;
 
 class sigproclkd;
@@ -95,6 +98,8 @@ public:
 private:
     void newsigproc(ptr<sigproc> sproc);
 };
+
+} // namespace dspunit
 
 //------------------------------------------------------------------------------
 #endif // MIMOSYSTEM_HPP

@@ -2,6 +2,10 @@
 //------------------------------------------------------------------------------
 
 //------------------------------------------------------------------------------
+
+namespace dspunit
+{
+
 static struct nullproc_t : tsigproc_infixed<1,0>
 {
     void update(unsigned, float &v) override { v = 0.f; }
@@ -11,6 +15,9 @@ static struct nullproc_t : tsigproc_infixed<1,0>
 //------------------------------------------------------------------------------
 sigproc *sigproc::nullproc()
 {
-    return &::nullproc;
+    return &::dspunit::nullproc;
 }
 //------------------------------------------------------------------------------
+
+} // namespace dspunit
+

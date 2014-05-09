@@ -5,6 +5,9 @@
 #include <algorithm>
 //------------------------------------------------------------------------------
 
+namespace dspunit
+{
+
 using std::begin;
 using std::end;
 using std::find;
@@ -220,4 +223,6 @@ void mimosystem::unlinkall()
     outnodes_.clear();
 }
 //------------------------------------------------------------------------------
+
+} //namespace dspunit
 

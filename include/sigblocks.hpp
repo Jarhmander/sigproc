@@ -6,10 +6,8 @@
 #include <vector>
 //------------------------------------------------------------------------------
 
-template <typename T>
- using vec = std::vector<T>;
-
-using vecnodes = vec<signode *>;
+namespace dspunit
+{
 
 class constant : public tsigproc_infixed<1,0>
 {
@@ -68,6 +66,8 @@ public:
         z = inputs_[0]->value();
     }
 };
+
+} // namespace dspunit
 
 //------------------------------------------------------------------------------
 #endif // SIGBLOCKS_HPP
