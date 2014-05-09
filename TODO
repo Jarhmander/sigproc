@@ -1,0 +1,7 @@
+TODO
+====================
+
+- change license to MIT
+- move repo to dspunit
+- make possible the fusion of two mimosystem
+- implement a sigproc that construct from a mimosystem&& (steal resources), strip all the unused stuff
