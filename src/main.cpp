@@ -8,6 +8,14 @@ using namespace std;
 
 namespace dsp = dspunit;
 
+struct Testing
+{
+    dsp::sigproc *operator()() const
+    {
+        cout << "Lolzor" << endl;
+        return new dsp::constant {3};
+    }
+};
 
 int main()
 {
@@ -15,7 +23,7 @@ int main()
 
     auto c_adder00 = mms.create<dsp::adder>();
     auto c_const00 = mms.create<dsp::constant>(2);
-    auto c_const01 = mms.create<dsp::constant>(3);
+    auto c_const01 = mms.create<dsp::sigproc, Testing>();
     auto c_sgain00 = mms.create<dsp::gain>(.5);
     auto c_delay00 = mms.create<dsp::delay1>();
 

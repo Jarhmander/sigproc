@@ -17,6 +17,16 @@ class sigproclkd;
 
 class signode;
 
+template <typename T>
+ struct construct
+{
+    template <typename... Args>
+     T *operator()(Args &&...args) const
+    {
+        return new T(std::forward<Args>(args)...);
+    }
+};
+
 class mimosystem
 {
 private:
@@ -65,10 +75,11 @@ public:
 
     unsigned current_clock() const      { return current_clock_; }
 
-    template <typename T, typename ...Args>
-     T *create(Args&&... args)
+    template <typename T, typename Func = ::dspunit::construct<T>,
+                                                               typename... Args>
+     T *create(Args &&...args)
     {
-        auto p   = ptr<T>(new T(std::forward<Args>(args)...));
+        ptr<T> p { Func()(std::forward<Args>(args)...) };
         auto ret = p.get();
         newsigproc(std::move(p));
         return ret;
