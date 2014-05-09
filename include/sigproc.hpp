@@ -15,10 +15,10 @@ public:
     // dtor
     virtual ~sigproc() {}
 
-    // signode calls sigproc::update when necessary.
+    // signode::update calls sigproc::update when necessary.
     // sigprocs can update directly the float reference if there's only one
     // output, if desired. Otherwise, it must update all its output nodes by
-    // calling update on them with the final values of the respective nodes.
+    // calling commit on them with the final values of the respective nodes.
     virtual void update(unsigned, float &) = 0;
 
     // Number of input nodes. Note that this isn't necessarily a constant value,

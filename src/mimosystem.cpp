@@ -24,7 +24,7 @@ auto mimosystem::out(bool postclock) -> const vec<signode *> &
 {
     for (auto &e : outnodes_)
     {
-        e->out(current_clock_);
+        e->update(current_clock_);
     }
     if (postclock)
     {
@@ -210,7 +210,7 @@ void mimosystem::newsigproc(ptr<sigproc> pin)
     for (unsigned i = 0; i < numoutnodes; ++i)
     {
         auto pout = p->outnode(i);
-        pout->update(current_clock_ - 1, 0);
+        pout->commit(current_clock_ - 1, 0);
         connections_[pout] = {};
     }
 }

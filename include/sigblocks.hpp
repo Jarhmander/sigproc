@@ -35,7 +35,7 @@ public:
         float out = 0.f;
         for (auto &in : inputs_)
         {
-            out += in->out(inclock);
+            out += in->update(inclock);
         }
         v = out;
     }
@@ -50,7 +50,7 @@ public:
 
     void update(unsigned inclock, float &v) override
     {
-        v = inputs_[0]->out(inclock) * value;
+        v = inputs_[0]->update(inclock) * value;
     }
 };
 
@@ -61,7 +61,7 @@ public:
     void update(unsigned inclock, float &v) override
     {
         v = z;
-        inputs_[0]->out(inclock);
+        inputs_[0]->update(inclock);
     }
     void clock() override
     {

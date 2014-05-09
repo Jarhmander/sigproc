@@ -11,8 +11,8 @@ class signode
 public:
     signode();
     signode(sigproc *sproc);
-    float out(unsigned inclock);
-    void  update(unsigned inclock, float value);
+    float update(unsigned inclock);
+    void  commit(unsigned inclock, float value);
 
     void connect(sigproc *);
     void disconnect();

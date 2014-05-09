@@ -25,7 +25,7 @@ signode::signode(sigproc *sproc)
     name += std::move(ss).str();
 }
 //------------------------------------------------------------------------------
-float signode::out(unsigned inclock)
+float signode::update(unsigned inclock)
 {
     if (clockref_ != inclock)
     {
@@ -35,7 +35,7 @@ float signode::out(unsigned inclock)
     return value_;
 }
 //------------------------------------------------------------------------------
-void signode::update(unsigned inclock, float val)
+void signode::commit(unsigned inclock, float val)
 {
     clockref_ = inclock;
     value_    = val;
