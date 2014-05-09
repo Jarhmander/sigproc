@@ -12,14 +12,14 @@ namespace dspunit
 class constant : public tsigproc_infixed<1,0>
 {
 public:
-    float value = 0.f;
+    sigvalue_t value = {};
 
-    constant(float v) : value{v} {}
+    constant(sigvalue_t v) : value{v} {}
 
-    void set(float v) { value = v; }
-    float get() const { return value; }
+    void set(sigvalue_t v) { value = v; }
+    sigvalue_t get() const { return value; }
 
-    void update(unsigned, float &v) override
+    void update(clockref_t, sigvalue_t &v) override
     {
         v = value;
     }
@@ -28,9 +28,9 @@ public:
 class adder : public tsigproc_invar<1,2>
 {
 public:
-    void update(unsigned inclock, float &v) override
+    void update(clockref_t inclock, sigvalue_t &v) override
     {
-        float out = 0.f;
+        sigvalue_t out = 0;
         for (auto &in : inputs_)
         {
             out += in->update(inclock);
@@ -42,11 +42,11 @@ public:
 class gain   : public tsigproc_infixed<1,1>
 {
 public:
-    gain(float a) { value = a; }
+    gain(sigvalue_t a) { value = a; }
 
-    float value = 1.f;
+    sigvalue_t value = 1;
 
-    void update(unsigned inclock, float &v) override
+    void update(clockref_t inclock, sigvalue_t &v) override
     {
         v = inputs_[0]->update(inclock) * value;
     }
@@ -54,9 +54,9 @@ public:
 
 class delay1 : public tsigproc_infixed<1,1>, public sigproclkd
 {
-    float z = 0.f;
+    sigvalue_t z = {};
 public:
-    void update(unsigned inclock, float &v) override
+    void update(clockref_t inclock, sigvalue_t &v) override
     {
         v = z;
         inputs_[0]->update(inclock);

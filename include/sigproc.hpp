@@ -1,6 +1,7 @@
 #ifndef SIGPROC_HPP
 #define SIGPROC_HPP
 //------------------------------------------------------------------------------
+#include "common.hpp"
 #include "signode.hpp"
 #include <array>
 #include <vector>
@@ -18,10 +19,10 @@ public:
     virtual ~sigproc() {}
 
     // signode::update calls sigproc::update when necessary.
-    // sigprocs can update directly the float reference if there's only one
+    // sigprocs can update directly the sigvalue_t reference if there's only one
     // output, if desired. Otherwise, it must update all its output nodes by
     // calling commit on them with the final values of the respective nodes.
-    virtual void update(unsigned, float &) = 0;
+    virtual void update(clockref_t, sigvalue_t &) = 0;
 
     // Number of input nodes. Note that this isn't necessarily a constant value,
     // that is, it may change if the "component" can change its number of

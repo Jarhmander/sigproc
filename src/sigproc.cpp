@@ -8,7 +8,7 @@ namespace dspunit
 
 static struct nullproc_t : tsigproc_infixed<1,0>
 {
-    void update(unsigned, float &v) override { v = 0.f; }
+    void update(clockref_t, sigvalue_t &v) override { v = {}; }
 } nullproc;
 //------------------------------------------------------------------------------
 

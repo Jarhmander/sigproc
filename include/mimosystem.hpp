@@ -1,6 +1,8 @@
 #ifndef MIMOSYSTEM_HPP
 #define MIMOSYSTEM_HPP
 //------------------------------------------------------------------------------
+#include "common.hpp"
+//------------------------------------------------------------------------------
 #include <vector>
 #include <unordered_map>
 #include <unordered_set>
@@ -62,7 +64,7 @@ private:
     set<sigproclkd *>                               sigproclkds_;
     vec<signode *>                                  outnodes_;
 
-    unsigned current_clock_ = 0;
+    clockref_t current_clock_ = 0;
 
 public:
     mimosystem();
@@ -71,9 +73,9 @@ public:
 
     void  clock() const;
 
-    void current_clock(unsigned newclk) { current_clock_ = newclk; }
+    void current_clock(clockref_t newclk) { current_clock_ = newclk; }
 
-    unsigned current_clock() const      { return current_clock_; }
+    clockref_t current_clock() const      { return current_clock_; }
 
     template <typename T, typename Func = ::dspunit::construct<T>,
                                                                typename... Args>
