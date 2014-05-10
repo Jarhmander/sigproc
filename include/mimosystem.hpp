@@ -19,16 +19,6 @@ class sigproclkd;
 
 class signode;
 
-template <typename T>
- struct construct
-{
-    template <typename... Args>
-     T *operator()(Args &&...args) const
-    {
-        return new T(std::forward<Args>(args)...);
-    }
-};
-
 class mimosystem
 {
 private:
@@ -69,34 +59,40 @@ private:
 public:
     mimosystem();
 
-    auto out(bool postclock = true) -> const vec<signode *> &;
+    const vec<signode *> &out()
+    {
+        return outnodes_;
+    }
 
-    void  clock() const;
+    const vec<signode *> &update();
+
+    const vec<signode *> &update(clockref_t newclk)
+    {
+        current_clock_ = newclk;
+        return update();
+    }
+
 
     void current_clock(clockref_t newclk) { current_clock_ = newclk; }
 
     clockref_t current_clock() const      { return current_clock_; }
 
-    template <typename T, typename Func = ::dspunit::construct<T>,
-                                                               typename... Args>
+    template <typename T, typename... Args>
      T *create(Args &&...args)
     {
-        ptr<T> p { Func()(std::forward<Args>(args)...) };
-        auto ret = p.get();
-        newsigproc(std::move(p));
-        return ret;
+        return create_internal( new T(std::forward<Args>(args)...) );
     }
 
-    void destroy(unsigned idx);
+    template <typename Func, typename... Args>
+     auto createfrom(Func func, Args &&...args)
+        -> decltype( func(std::forward<Args>(args)...) )
+    {
+        return create_internal( func(std::forward<Args>(args)...) );
+    }
+
     void destroy(sigproc *);
-
-    unsigned index(sigproc *) const;
-
     sigproc *connect(sigproc *, unsigned in, signode *);
-    sigproc *connect(unsigned idx, unsigned in, signode *node);
-
     sigproc *disconnect(sigproc *, unsigned in);
-    sigproc *disconnect(unsigned idx, unsigned in);
 
     signode *link(signode *, unsigned out);
     signode *linknext(signode *);
@@ -109,7 +105,25 @@ public:
     }
 
 private:
+    unsigned index(sigproc *) const;
+
+    sigproc *connect(unsigned idx, unsigned in, signode *node);
+    sigproc *disconnect(unsigned idx, unsigned in);
+    void destroy(unsigned idx);
+
+    template <typename T>
+     T *create_internal(T *t)
+    {
+        auto p = ptr<T> { t };
+        newsigproc(std::move(p));
+        return t;
+    }
+
     void newsigproc(ptr<sigproc> sproc);
+
+    void updateout();
+
+    void clock();
 };
 
 } // namespace dspunit
