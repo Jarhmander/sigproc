@@ -2,7 +2,9 @@
 //------------------------------------------------------------------------------
 #include "sigproc.hpp"
 #include "signode.hpp"
+#include "vecset.hpp"
 #include <algorithm>
+#include <iterator>
 //------------------------------------------------------------------------------
 
 namespace dspunit
@@ -11,9 +13,25 @@ namespace dspunit
 using std::begin;
 using std::end;
 using std::find;
+using std::binary_search;
 using std::move;
+using std::copy;
+using std::make_move_iterator;
 using std::lower_bound;
-using std::upper_bound;
+
+struct nodelete
+{
+    void operator()(...) const {}
+};
+
+template <typename T>
+ using fake_ptr = std::unique_ptr<T, nodelete>;
+
+template <typename T>
+ fake_ptr<T> make_fake(T *t)
+{
+    return fake_ptr<T> {t};
+}
 
 //------------------------------------------------------------------------------
 mimosystem::mimosystem()
@@ -33,111 +51,10 @@ auto mimosystem::update() -> const vec<signode *> &
 //------------------------------------------------------------------------------
 void mimosystem::destroy(sigproc *sproc)
 {
-    return destroy(index(sproc));
-}
-//------------------------------------------------------------------------------
-sigproc *mimosystem::connect(sigproc *sproc, unsigned in, signode *node)
-{
-    return connect(index(sproc), in, node);
-}
-//------------------------------------------------------------------------------
-sigproc *mimosystem::disconnect(sigproc *sproc, unsigned in)
-{
-    return disconnect(index(sproc), in);
-}
-//------------------------------------------------------------------------------
-signode *mimosystem::link(signode *node, unsigned out)
-{
-    if (out > outnodes_.size())
-        return nullptr;
+    auto it = ::dspunit::find(sigprocs_, make_fake(sproc) );
+    if (it == end(sigprocs_))
+        return;
 
-    auto endoutn = end(outnodes_);
-    auto begoutn = begin(outnodes_);
-
-    auto it = find(begoutn, endoutn, node);
-    if (it != endoutn)
-        return nullptr;
-
-    outnodes_.emplace(begoutn + out, node);
-
-    return node;
-}
-//------------------------------------------------------------------------------
-signode *mimosystem::linknext(signode *node)
-{
-    return link(node, outnodes_.size());
-}
-//------------------------------------------------------------------------------
-signode *mimosystem::unlink(unsigned out)
-{
-    if (out >= outnodes_.size())
-        return nullptr;
-
-    outnodes_.erase(begin(outnodes_) + out);
-}
-//------------------------------------------------------------------------------
-unsigned mimosystem::index(sigproc *sproc) const
-{
-    auto begsigp = begin(sigprocs_);
-    auto endsigp = end(sigprocs_);
-
-    auto it = lower_bound(begsigp, endsigp, sproc,
-            [](const ptr<sigproc> &a, sigproc *b)
-            {
-                return a.get() < b;
-            });
-    if (it != endsigp && it->get() != sproc)
-        it = endsigp;
-
-    return it - begsigp;
-}
-//------------------------------------------------------------------------------
-void mimosystem::unlinkall()
-{
-    outnodes_.clear();
-}
-//------------------------------------------------------------------------------
-sigproc *mimosystem::connect(unsigned idx, unsigned in, signode *node)
-{
-    // Connect {sigprocs_[idx], in} input to node
-    
-    auto to_it = connections_.find(node);
-
-    if (to_it == end(connections_) && node)
-        return nullptr;
-
-    if (idx >= sigprocs_.size())
-        return nullptr;
-    
-    const auto sproc = sigprocs_[idx].get();
-
-    const auto from_node = sproc->innode(in);
-    
-    auto from_it = connections_.find(from_node);
-    if (from_it != connections_.end())
-    {
-        from_it->second.erase({sproc, in});
-    }
-
-    if (!sproc->connect(in, node))
-        return nullptr;
-
-    to_it->second.insert({sproc, in});
-
-    return sproc;
-}
-//------------------------------------------------------------------------------
-sigproc *mimosystem::disconnect(unsigned idx, unsigned in)
-{
-    return connect(idx, in, nullptr);
-}
-//------------------------------------------------------------------------------
-void mimosystem::destroy(unsigned idx)
-{
-    if (idx >= sigprocs_.size())
-       return;
-
-    auto it = sigprocs_.begin() + idx;
     const auto p = it->get();
 
     // Remove from sigproclks, if it exists
@@ -177,18 +94,107 @@ void mimosystem::destroy(unsigned idx)
     sigprocs_.erase(it);
 }
 //------------------------------------------------------------------------------
+sigproc *mimosystem::connect(sigproc *sproc, unsigned in, signode *node)
+{
+    // Connect {sigprocs_[idx], in} input to node
+
+    auto to_it = connections_.find(node);
+
+    if (to_it == end(connections_) && node)
+        return nullptr;
+
+    if (!binary_search(begin(sigprocs_), end(sigprocs_), make_fake(sproc)))
+        return nullptr;
+
+    const auto from_node = sproc->innode(in);
+
+    auto from_it = connections_.find(from_node);
+    if (from_it != connections_.end())
+    {
+        from_it->second.erase({sproc, in});
+    }
+
+    if (!sproc->connect(in, node))
+        return nullptr;
+
+    to_it->second.insert({sproc, in});
+
+    return sproc;
+}
+//------------------------------------------------------------------------------
+sigproc *mimosystem::disconnect(sigproc *sproc, unsigned in)
+{
+    return connect(sproc, in, nullptr);
+}
+//------------------------------------------------------------------------------
+signode *mimosystem::link(signode *node, unsigned out)
+{
+    if (out > outnodes_.size())
+        return nullptr;
+
+    auto endoutn = end(outnodes_);
+    auto begoutn = begin(outnodes_);
+
+    auto it = find(begoutn, endoutn, node);
+    if (it != endoutn)
+        return nullptr;
+
+    outnodes_.emplace(begoutn + out, node);
+
+    return node;
+}
+//------------------------------------------------------------------------------
+signode *mimosystem::linknext(signode *node)
+{
+    return link(node, outnodes_.size());
+}
+//------------------------------------------------------------------------------
+signode *mimosystem::unlink(unsigned out)
+{
+    if (out >= outnodes_.size())
+        return nullptr;
+
+    outnodes_.erase(begin(outnodes_) + out);
+}
+//------------------------------------------------------------------------------
+mimosystem &mimosystem::operator+=(mimosystem &&a)
+{
+    sigprocs_.reserve(sigprocs_.size() + a.sigprocs_.size());
+    outnodes_.reserve(outnodes_.size() + a.outnodes_.size());
+
+    // move things into outnodes
+    outnodes_.insert(outnodes_.end(),  a.outnodes_.begin(), a.outnodes_.end() );
+
+    // move things into sigprocs_
+    insert_sort_range(sigprocs_,
+            make_move_iterator(a.sigprocs_.begin()),
+            make_move_iterator(a.sigprocs_.end()));
+
+    // move things into connections_
+    connections_.insert(
+            make_move_iterator(a.connections_.begin()),
+            make_move_iterator(a.connections_.end())
+            );
+
+    // move things into sigproclkds_
+    sigproclkds_.insert(
+            (a.sigproclkds_.begin()),
+            (a.sigproclkds_.end())
+            );
+    return *this;
+}
+//------------------------------------------------------------------------------
+void mimosystem::unlinkall()
+{
+    outnodes_.clear();
+}
+//------------------------------------------------------------------------------
 void mimosystem::newsigproc(ptr<sigproc> pin)
 {
     const auto p = pin.get();
 
     // insert into sigprocs_ the new sigproc
-    sigprocs_.emplace(
-            upper_bound(begin(sigprocs_), end(sigprocs_), p,
-                [](sigproc *a, const ptr<sigproc> &b)
-                {
-                    return a < b.get();
-                }), move(pin)
-            );
+    insert_sort(sigprocs_, move(pin));
 
     // If this can be clocked, add to sigproclkd
     const auto sclk = dynamic_cast<sigproclkd*>(p);

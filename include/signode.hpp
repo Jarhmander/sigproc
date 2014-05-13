@@ -23,6 +23,7 @@ public:
     // establish the new node value
     void commit(clockref_t inclock, sigvalue_t value);
 
+    // TODO: make private, or remove (if we can get rid of the default ctor)
     void connect(sigproc *);
     void disconnect();
 

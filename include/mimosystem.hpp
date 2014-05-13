@@ -37,14 +37,14 @@ private:
     {
         std::size_t operator()(const input_desc &id) const
         {
-            return std::hash<void*>()(id.sproc) 
+            return std::hash<void*>()(id.sproc)
                  ^ std::hash<unsigned>()(id.input);
         }
     };
 
     template <typename T>   using ptr   = std::unique_ptr<T>;
     template <typename T>   using vec   = std::vector<T>;
-    template <typename Key, typename T> 
+    template <typename Key, typename T>
                             using hasht = std::unordered_map<Key,T>;
     template <typename Key, typename HashF=std::hash<Key>>
                              using set   = std::unordered_set<Key,HashF>;
@@ -59,6 +59,12 @@ private:
 public:
     mimosystem();
 
+    mimosystem(const mimosystem &)            = delete;
+    mimosystem &operator=(const mimosystem &) = delete;
+
+    mimosystem(mimosystem &&)            = default;
+    mimosystem &operator=(mimosystem &&) = default;
+
     const vec<signode *> &out()
     {
         return outnodes_;
@@ -72,6 +78,7 @@ public:
         return update();
     }
 
+    // TODO: advance
 
     void current_clock(clockref_t newclk) { current_clock_ = newclk; }
 
@@ -90,6 +97,11 @@ public:
         return create_internal( func(std::forward<Args>(args)...) );
     }
 
+    void clear()
+    {
+        *this = {};
+    }
+
     void destroy(sigproc *);
     sigproc *connect(sigproc *, unsigned in, signode *);
     sigproc *disconnect(sigproc *, unsigned in);
@@ -104,13 +116,14 @@ public:
         return sigprocs_;
     }
 
+    friend auto operator+(mimosystem &&a, mimosystem &&b) -> mimosystem
+    {
+        using std::move;
+        return move(mimosystem {move(a)} += move(b));
+    }
+
+    mimosystem &operator+=(mimosystem &&);
 private:
-    unsigned index(sigproc *) const;
-
-    sigproc *connect(unsigned idx, unsigned in, signode *node);
-    sigproc *disconnect(unsigned idx, unsigned in);
-    void destroy(unsigned idx);
-
     template <typename T>
      T *create_internal(T *t)
     {
