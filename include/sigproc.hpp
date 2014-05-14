@@ -139,12 +139,9 @@ template <unsigned num_out, typename Base>
  class tsigproc : public Base
 {
 public:
-    tsigproc() 
+    tsigproc()
     {
-        for (auto &i : outputs_)
-        {
-            i.connect(this);
-        }
+        outputs_ = std::vector<signode>(num_out, this);
     }
 
     unsigned num_outnodes() const override
@@ -158,7 +155,7 @@ public:
     }
 
 protected:
-    std::array<signode, num_out> outputs_; 
+    std::vector<signode> outputs_;
 };
 
 template <unsigned num_out, unsigned num_in>

@@ -14,11 +14,6 @@ signode nullnode {sigproc::nullproc()};
 //------------------------------------------------------------------------------
 
 //------------------------------------------------------------------------------
-signode::signode()
-    : signode(sigproc::nullproc())
-{
-}
-//------------------------------------------------------------------------------
 signode::signode(sigproc *sproc) 
     : sigproc_{sproc}
 {
@@ -42,16 +37,6 @@ void signode::commit(clockref_t inclock, sigvalue_t val)
 {
     clockref_ = inclock;
     value_    = val;
-}
-//------------------------------------------------------------------------------
-void signode::connect(sigproc *sproc)
-{
-    sigproc_ = sproc;
-}
-//------------------------------------------------------------------------------
-void signode::disconnect()
-{
-    connect(sigproc::nullproc());
 }
 //------------------------------------------------------------------------------
 bool signode::value(clockref_t inclock, sigvalue_t &v) const
