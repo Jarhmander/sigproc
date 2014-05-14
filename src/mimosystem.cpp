@@ -117,7 +117,10 @@ sigproc *mimosystem::connect(sigproc *sproc, unsigned in, signode *node)
     if (!sproc->connect(in, node))
         return nullptr;
 
-    to_it->second.insert({sproc, in});
+    if (node)
+    {
+        to_it->second.insert({sproc, in});
+    }
 
     return sproc;
 }
