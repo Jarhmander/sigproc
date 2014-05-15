@@ -32,7 +32,7 @@ public:
     // Number of output nodes. Can't be zero, and can't change over time.
     virtual unsigned num_outnodes() const = 0;
 
-    // Give the Nth output node, 0-based. If node doesn't exist, gives a 
+    // Give the Nth output node, 0-based. If node doesn't exist, gives a
     // nullptr.
     virtual signode *outnode(unsigned) = 0;
 
@@ -112,10 +112,10 @@ public:
     sigproc_varninputs()
     {
         this->inputs_.reserve(num_in);
-        this->inputs_.insert(this->inputs_.begin(), num_in, 
+        this->inputs_.insert(this->inputs_.begin(), num_in,
                                                         signode::nullnode());
     }
-    
+
     void resize_innodes(unsigned newsz) override
     {
         this->inputs_.resize(newsz,signode::nullnode());

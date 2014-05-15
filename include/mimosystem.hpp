@@ -59,9 +59,12 @@ private:
 public:
     mimosystem();
 
+    // Don't allow copy
+    // (Serialize/deserialize would be a thing more sensible to do)
     mimosystem(const mimosystem &)            = delete;
     mimosystem &operator=(const mimosystem &) = delete;
 
+    // Allow moving, however
     mimosystem(mimosystem &&)            = default;
     mimosystem &operator=(mimosystem &&) = default;
 
