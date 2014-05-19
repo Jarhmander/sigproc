@@ -19,23 +19,23 @@ public:
     void set(sigvalue_t v) { value = v; }
     sigvalue_t get() const { return value; }
 
-    void update(clockref_t, sigvalue_t &v) override
+    void update(clockref_t inclock) override
     {
-        v = value;
+        outputs_[0].commit(inclock, value);
     }
 };
 
 class adder : public tsigproc_invar<1,2>
 {
 public:
-    void update(clockref_t inclock, sigvalue_t &v) override
+    void update(clockref_t inclock) override
     {
         sigvalue_t out = 0;
         for (auto &in : inputs_)
         {
             out += in->update(inclock);
         }
-        v = out;
+        outputs_[0].commit(inclock, out);
     }
 };
 
@@ -46,9 +46,10 @@ public:
 
     sigvalue_t value = 1;
 
-    void update(clockref_t inclock, sigvalue_t &v) override
+    void update(clockref_t inclock) override
     {
-        v = inputs_[0]->update(inclock) * value;
+        const auto in = inputs_[0]->update(inclock) * value;
+        outputs_[0].commit(inclock, in);
     }
 };
 
@@ -56,9 +57,9 @@ class delay1 : public tsigproc_infixed<1,1>, public sigproclkd
 {
     sigvalue_t z = {};
 public:
-    void update(clockref_t inclock, sigvalue_t &v) override
+    void update(clockref_t inclock) override
     {
-        v = z;
+        outputs_[0].commit(inclock, z);
         inputs_[0]->update(inclock);
     }
     void clock() override

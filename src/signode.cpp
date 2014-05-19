@@ -28,7 +28,7 @@ sigvalue_t signode::update(clockref_t inclock)
     if (clockref_ != inclock)
     {
         clockref_ = inclock;
-        sigproc_->update(inclock, value_);
+        sigproc_->update(inclock);
     }
     return value_;
 }

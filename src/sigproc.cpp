@@ -8,7 +8,10 @@ namespace dspunit
 
 static struct nullproc_t : tsigproc_infixed<1,0>
 {
-    void update(clockref_t, sigvalue_t &v) override { v = {}; }
+    void update(clockref_t inclock) override
+    {
+        outputs_[0].commit(inclock, {});
+    }
 } nullproc;
 //------------------------------------------------------------------------------
 
