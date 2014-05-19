@@ -44,6 +44,8 @@ mimosystem::mimosystem()
 auto mimosystem::update() -> const vec<signode *> &
 {
     updateout();
+    ++current_clock_;
+    updateout();
     clock();
 
     return outnodes_;
